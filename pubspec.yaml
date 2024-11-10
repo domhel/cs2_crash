@@ -1,7 +1,7 @@
 name: cs_crash
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0
 
 environment:
   sdk: ^3.5.4
@@ -9,8 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_animate: ^4.5.0
-  signals_flutter: ^5.5.1
+  in_app_review: ^2.0.9
+  vibration: ^2.0.1
 
 dev_dependencies:
   flutter_test:

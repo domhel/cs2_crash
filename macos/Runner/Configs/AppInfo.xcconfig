@@ -8,7 +8,7 @@
 PRODUCT_NAME = CS2 Crash
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = de.domhel.csCrash
+PRODUCT_BUNDLE_IDENTIFIER = de.domhel.cs2crash
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2024 de.domhel. All rights reserved.
