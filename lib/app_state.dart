@@ -36,6 +36,7 @@ class AppState extends ChangeNotifier {
   bool crashed = false;
 
   double coins = 100;
+  bool isCoinsTextExpanded = false;
   double lastBet = 10;
   bool canBet(double bet) => bet <= coins;
 
@@ -95,24 +96,27 @@ class AppState extends ChangeNotifier {
     cashedOut = true;
     cashOutCount++;
     coins += currentFactor * lastBet;
+    isCoinsTextExpanded = true;
+    notifyListeners();
     HapticFeedback.mediumImpact()
         .then((_) => Future.delayed(const Duration(milliseconds: 200)))
-        .then((_) => HapticFeedback.heavyImpact())
         .then((_) {
+      isCoinsTextExpanded = false;
+      notifyListeners();
+      return HapticFeedback.heavyImpact();
+    }).then((_) {
       if (!_hasAskedForFeedback && cashOutCount >= 2) {
         _hasAskedForFeedback = true;
         InAppReview.instance.isAvailable().then((available) {
           if (available) {
             InAppReview.instance.requestReview();
             SharedPreferences.getInstance().then((prefs) {
-              _hasAskedForFeedback =
-                  prefs.getBool('hasAskedForFeedback_v1') ?? false;
+              prefs.setBool('hasAskedForFeedback_v1', true);
             });
           }
         });
       }
     });
-    notifyListeners();
   }
 
   void stop() {

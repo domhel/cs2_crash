@@ -20,9 +20,10 @@ class MainApp extends StatelessWidget {
           listenable: AppState.instance,
           builder: (context, child) {
             final mediumText = Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold);
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold) ??
+                const TextStyle();
             return Scaffold(
               bottomSheet: BottomSheet(
                 enableDrag: false,
@@ -37,9 +38,15 @@ class MainApp extends StatelessWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              Text(
-                                'Coins: \$${AppState.instance.coins.toStringAsFixed(2)}',
-                                style: mediumText,
+                              AnimatedDefaultTextStyle(
+                                style: AppState.instance.isCoinsTextExpanded
+                                    ? mediumText.apply(fontSizeFactor: 2)
+                                    : mediumText,
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeInOut,
+                                child: Text(
+                                  'Coins: \$${AppState.instance.coins.toStringAsFixed(2)}',
+                                ),
                               ),
                               const SizedBox(width: 16),
                               Text(
