@@ -55,6 +55,7 @@ class MainApp extends StatelessWidget {
                               backgroundColor: AppState.instance.crashed
                                   ? Colors.red[200]
                                   : Colors.green[200],
+                              textStyle: mediumText,
                             ),
                             onPressed: switch (AppState.instance.state) {
                               GameState.playing => AppState.instance.cashedOut
@@ -90,7 +91,7 @@ class MainApp extends StatelessWidget {
                             : Colors.green,
                         child: FittedBox(
                           child: Text(
-                            AppState.instance.currentFactor.toStringAsFixed(2),
+                            'x ${AppState.instance.currentFactor.toStringAsFixed(2)}',
                             style: Theme.of(context)
                                 .textTheme
                                 .displayLarge
