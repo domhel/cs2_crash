@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:in_app_review/in_app_review.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 
 enum GameState {
@@ -14,9 +16,13 @@ enum GameState {
 class AppState extends ChangeNotifier {
   static final instance = AppState._();
   bool _hasVibrator = true;
+  bool _hasAskedForFeedback = false;
   AppState._() {
     Vibration.hasVibrator().then((hasVibrator) {
       _hasVibrator = hasVibrator == true;
+    });
+    SharedPreferences.getInstance().then((prefs) {
+      _hasAskedForFeedback = prefs.getBool('hasAskedForFeedback_v1') ?? false;
     });
   }
 
@@ -69,6 +75,18 @@ class AppState extends ChangeNotifier {
         state = GameState.crashed;
         if (_hasVibrator) {
           Vibration.vibrate();
+        }
+        if (cashedOut && !_hasAskedForFeedback) {
+          _hasAskedForFeedback = true;
+          InAppReview.instance.isAvailable().then((available) {
+            if (available) {
+              InAppReview.instance.requestReview();
+              SharedPreferences.getInstance().then((prefs) {
+                _hasAskedForFeedback =
+                    prefs.getBool('hasAskedForFeedback_v1') ?? false;
+              });
+            }
+          });
         }
       } else {
         i += step;

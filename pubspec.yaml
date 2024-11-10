@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   in_app_review: ^2.0.9
+  shared_preferences: ^2.3.3
   vibration: ^2.0.1
 
 dev_dependencies:
