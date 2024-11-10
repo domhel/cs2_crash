@@ -19,7 +19,10 @@ class MainApp extends StatelessWidget {
       home: ListenableBuilder(
           listenable: AppState.instance,
           builder: (context, child) {
-            final mediumText = Theme.of(context).textTheme.headlineSmall;
+            final mediumText = Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(fontWeight: FontWeight.bold);
             return Scaffold(
               bottomSheet: BottomSheet(
                 enableDrag: false,
@@ -99,6 +102,7 @@ class MainApp extends StatelessWidget {
                               fontFeatures: [
                                 const FontFeature.tabularFigures()
                               ],
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
