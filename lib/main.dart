@@ -80,36 +80,31 @@ class MainApp extends StatelessWidget {
                   );
                 },
               ),
-              body: SafeArea(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        width: double.infinity,
-                        height: double.infinity,
-                        alignment: const Alignment(0, -0.25),
-                        color: AppState.instance.crashed
-                            ? Colors.red
-                            : Colors.green,
-                        child: FittedBox(
-                          child: Text(
-                            'x ${AppState.instance.currentFactor.toStringAsFixed(2)}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .displayLarge
-                                ?.copyWith(
-                              fontFeatures: [
-                                const FontFeature.tabularFigures()
-                              ],
-                              fontWeight: FontWeight.bold,
-                            ),
+              body: Column(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      width: double.infinity,
+                      height: double.infinity,
+                      alignment: const Alignment(0, -0.35),
+                      color:
+                          AppState.instance.crashed ? Colors.red : Colors.green,
+                      child: FittedBox(
+                        child: Text(
+                          'x ${AppState.instance.currentFactor.toStringAsFixed(2)}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .displayLarge
+                              ?.copyWith(
+                            fontFeatures: [const FontFeature.tabularFigures()],
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           }),

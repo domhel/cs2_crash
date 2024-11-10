@@ -32,10 +32,11 @@ class AppState extends ChangeNotifier {
   GameState state = GameState.idle;
   double currentFactor = 1.0;
   bool cashedOut = false;
+  int cashOutCount = 0;
   bool crashed = false;
 
   double coins = 100;
-  double lastBet = 0;
+  double lastBet = 10;
   bool canBet(double bet) => bet <= coins;
 
   @override
@@ -76,18 +77,6 @@ class AppState extends ChangeNotifier {
         if (_hasVibrator) {
           Vibration.vibrate();
         }
-        if (cashedOut && !_hasAskedForFeedback) {
-          _hasAskedForFeedback = true;
-          InAppReview.instance.isAvailable().then((available) {
-            if (available) {
-              InAppReview.instance.requestReview();
-              SharedPreferences.getInstance().then((prefs) {
-                _hasAskedForFeedback =
-                    prefs.getBool('hasAskedForFeedback_v1') ?? false;
-              });
-            }
-          });
-        }
       } else {
         i += step;
       }
@@ -104,10 +93,25 @@ class AppState extends ChangeNotifier {
       return;
     }
     cashedOut = true;
+    cashOutCount++;
     coins += currentFactor * lastBet;
     HapticFeedback.mediumImpact()
         .then((_) => Future.delayed(const Duration(milliseconds: 200)))
-        .then((_) => HapticFeedback.heavyImpact());
+        .then((_) => HapticFeedback.heavyImpact())
+        .then((_) {
+      if (!_hasAskedForFeedback && cashOutCount >= 2) {
+        _hasAskedForFeedback = true;
+        InAppReview.instance.isAvailable().then((available) {
+          if (available) {
+            InAppReview.instance.requestReview();
+            SharedPreferences.getInstance().then((prefs) {
+              _hasAskedForFeedback =
+                  prefs.getBool('hasAskedForFeedback_v1') ?? false;
+            });
+          }
+        });
+      }
+    });
     notifyListeners();
   }
 
