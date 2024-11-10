@@ -30,7 +30,7 @@ class AppState extends ChangeNotifier {
 
   Timer? _timer;
   GameState state = GameState.idle;
-  double currentFactor = 1.0;
+  double currentFactor = 13.37;
   bool cashedOut = false;
   int cashOutCount = 0;
   bool crashed = false;
