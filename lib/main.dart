@@ -53,8 +53,8 @@ class MainApp extends StatelessWidget {
                           child: FilledButton(
                             style: FilledButton.styleFrom(
                               backgroundColor: AppState.instance.crashed
-                                  ? Colors.red[100]
-                                  : Colors.green[100],
+                                  ? Colors.red[200]
+                                  : Colors.green[200],
                             ),
                             onPressed: switch (AppState.instance.state) {
                               GameState.playing => AppState.instance.cashedOut
@@ -70,6 +70,7 @@ class MainApp extends StatelessWidget {
                             },
                           ),
                         ),
+                        const SizedBox(height: 32),
                       ],
                     ),
                   );

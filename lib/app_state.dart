@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:vibration/vibration.dart';
 
 enum GameState {
   idle,
@@ -11,7 +13,12 @@ enum GameState {
 
 class AppState extends ChangeNotifier {
   static final instance = AppState._();
-  AppState._();
+  bool _hasVibrator = true;
+  AppState._() {
+    Vibration.hasVibrator().then((hasVibrator) {
+      _hasVibrator = hasVibrator == true;
+    });
+  }
 
   final rng = Random.secure();
 
@@ -60,6 +67,9 @@ class AppState extends ChangeNotifier {
         timer.cancel();
         debugPrint('Crashed at $currentFactor');
         state = GameState.crashed;
+        if (_hasVibrator) {
+          Vibration.vibrate();
+        }
       } else {
         i += step;
       }
@@ -77,6 +87,9 @@ class AppState extends ChangeNotifier {
     }
     cashedOut = true;
     coins += currentFactor * lastBet;
+    HapticFeedback.mediumImpact()
+        .then((_) => Future.delayed(const Duration(milliseconds: 200)))
+        .then((_) => HapticFeedback.heavyImpact());
     notifyListeners();
   }
 
