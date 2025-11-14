@@ -49,7 +49,6 @@ class GameHistory {
       );
 }
 
-
 class FastDoubleBuffer {
   final Float64List _data;
   final Pointer<Double> _ptr;
@@ -134,7 +133,7 @@ class AppState extends ChangeNotifier {
   double lastBet = 10;
   double currentBetAmount = 10;
   bool canBet(double bet) => bet <= coins;
-  
+
   List<GameHistory> gameHistory = [];
 
   void updateBetAmount(double amount) {
@@ -148,7 +147,7 @@ class AppState extends ChangeNotifier {
   void _saveBalance() {
     _prefs?.setDouble('coins_balance', coins);
   }
-  
+
   void _saveHistory() {
     final encoded = jsonEncode(gameHistory.map((e) => e.toJson()).toList());
     _prefs?.setString('game_history', encoded);
