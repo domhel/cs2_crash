@@ -47,9 +47,23 @@ class MainApp extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 16),
-                              Text(
-                                'Bet: \$${AppState.instance.lastBet.toStringAsFixed(2)}',
-                                style: mediumText,
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Bet: \$${(AppState.instance.state == GameState.playing ? AppState.instance.lastBet : AppState.instance.currentBetAmount).toStringAsFixed(2)}',
+                                    style: mediumText,
+                                  ),
+                                  if (AppState.instance.state != GameState.playing) ...[
+                                    const SizedBox(width: 8),
+                                    IconButton(
+                                      icon: const Icon(Icons.edit, size: 20),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      onPressed: () => _showBetDialog(context),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ],
                           ),
@@ -66,14 +80,16 @@ class MainApp extends StatelessWidget {
                             onPressed: switch (AppState.instance.state) {
                               GameState.playing =>
                                 AppState.instance.cashedOut ? null : () => AppState.instance.cashOut(),
-                              _ => AppState.instance.canBet(10)
-                                  ? () => AppState.instance.play(10)
+                              _ => AppState.instance.canBet(AppState.instance.currentBetAmount)
+                                  ? () => AppState.instance.play(AppState.instance.currentBetAmount)
                                   : () => AppState.instance.refill(),
                             },
                             child: switch (AppState.instance.state) {
                               GameState.playing =>
                                 AppState.instance.cashedOut ? const Text('Cashed out') : const Text('Cash out'),
-                              _ => AppState.instance.canBet(10) ? const Text('Play') : const Text('Refill'),
+                              _ => AppState.instance.canBet(AppState.instance.currentBetAmount)
+                                  ? const Text('Play')
+                                  : const Text('Refill'),
                             },
                           ),
                         ),
@@ -141,6 +157,94 @@ class MainApp extends StatelessWidget {
               ),
             );
           }),
+    );
+  }
+}
+
+void _showBetDialog(BuildContext context) {
+  final controller = TextEditingController(
+    text: AppState.instance.currentBetAmount.toStringAsFixed(2),
+  );
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Set Bet Amount'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'Bet Amount',
+                prefixText: '\$',
+                border: const OutlineInputBorder(),
+                helperText: 'Max: \$${AppState.instance.coins.toStringAsFixed(2)}',
+              ),
+              onSubmitted: (value) {
+                final amount = double.tryParse(value);
+                if (amount != null && amount > 0 && amount <= AppState.instance.coins) {
+                  AppState.instance.updateBetAmount(amount);
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _QuickBetButton(controller: controller, amount: 5),
+                _QuickBetButton(controller: controller, amount: 10),
+                _QuickBetButton(controller: controller, amount: 25),
+                _QuickBetButton(controller: controller, amount: 50),
+                _QuickBetButton(controller: controller, amount: 100),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final amount = double.tryParse(controller.text);
+              if (amount != null && amount > 0 && amount <= AppState.instance.coins) {
+                AppState.instance.updateBetAmount(amount);
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Set'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+class _QuickBetButton extends StatelessWidget {
+  final TextEditingController controller;
+  final double amount;
+
+  const _QuickBetButton({
+    required this.controller,
+    required this.amount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: () {
+        if (amount <= AppState.instance.coins) {
+          controller.text = amount.toStringAsFixed(2);
+        }
+      },
+      child: Text('\$$amount'),
     );
   }
 }

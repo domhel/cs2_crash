@@ -60,12 +60,19 @@ class AppState extends ChangeNotifier {
   static final instance = AppState._();
   bool _hasVibrator = true;
   bool _hasAskedForFeedback = false;
+  SharedPreferences? _prefs;
+  
   AppState._() {
     Vibration.hasVibrator().then((hasVibrator) {
       _hasVibrator = hasVibrator == true;
     });
     SharedPreferences.getInstance().then((prefs) {
+      _prefs = prefs;
       _hasAskedForFeedback = prefs.getBool('hasAskedForFeedback_v1') ?? false;
+      // Load saved balance
+      coins = prefs.getDouble('coins_balance') ?? initialCapital;
+      currentBetAmount = prefs.getDouble('current_bet_amount') ?? 10;
+      notifyListeners();
     });
   }
 
@@ -82,7 +89,20 @@ class AppState extends ChangeNotifier {
   double coins = initialCapital;
   bool isCoinsTextExpanded = false;
   double lastBet = 10;
+  double currentBetAmount = 10;
   bool canBet(double bet) => bet <= coins;
+
+  void updateBetAmount(double amount) {
+    if (amount > 0) {
+      currentBetAmount = amount;
+      _prefs?.setDouble('current_bet_amount', amount);
+      notifyListeners();
+    }
+  }
+  
+  void _saveBalance() {
+    _prefs?.setDouble('coins_balance', coins);
+  }
 
   // Chart data for visualization
   static const int maxChartPoints = 10000; // Keep last 600 points for longer history
@@ -108,6 +128,7 @@ class AppState extends ChangeNotifier {
     crashed = false;
     cashedOut = false;
     coins -= lastBet;
+    _saveBalance();
     chartData[0] = 1.0; // Start chart with initial factor of 1.0
     chartDataIndex = 1;
     notifyListeners();
@@ -158,6 +179,7 @@ class AppState extends ChangeNotifier {
     cashedOut = true;
     cashOutCount++;
     coins += currentFactor * lastBet;
+    _saveBalance();
     isCoinsTextExpanded = true;
     notifyListeners();
     HapticFeedback.mediumImpact().then((_) => Future.delayed(const Duration(milliseconds: 200))).then((_) {
@@ -187,6 +209,7 @@ class AppState extends ChangeNotifier {
 
   void refill() {
     coins = initialCapital;
+    _saveBalance();
     notifyListeners();
   }
 
