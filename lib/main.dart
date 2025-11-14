@@ -115,48 +115,50 @@ class MainApp extends StatelessWidget {
                       height: double.infinity,
                       alignment: const Alignment(0, -0.35),
                       color: AppState.instance.crashed ? Colors.red : Colors.green,
-                      child: Stack(
-                        children: [
-                          // Info text at the top
-                          Positioned(
-                            top: 16,
-                            left: 16,
-                            right: 16,
-                            child: Text(
-                              'Press start and you see the factor go up. Cash out to receive your bet multiplied by the factor. Beware! You lose your bet if you haven\'t cashed out before crashing.',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          // Background chart
-                          if (AppState.instance.chartDataIndex > 0)
+                      child: SafeArea(
+                        child: Stack(
+                          children: [
+                            // Info text at the top
                             Positioned(
+                              top: 16,
                               left: 16,
                               right: 16,
-                              top: 60,
-                              bottom: 200, // Position above bottom sheet (lower than before)
-                              child: _CrashChart(
-                                data: AppState.instance.chartData,
-                                dataIndex: AppState.instance.chartDataIndex,
-                                crashed: AppState.instance.crashed,
+                              child: Text(
+                                'Press start and you see the factor go up. Cash out to receive your bet multiplied by the factor. Beware! You lose your bet if you haven\'t cashed out before crashing.',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.white.withOpacity(0.7),
+                                    ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
-                          // Factor display on top
-                          Align(
-                            alignment: const Alignment(0, -0.35),
-                            child: FittedBox(
-                              child: Text(
-                                'x ${AppState.instance.currentFactor.toStringAsFixed(2)}',
-                                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                                  fontFeatures: [const FontFeature.tabularFigures()],
-                                  fontWeight: FontWeight.bold,
+                            // Background chart
+                            if (AppState.instance.chartDataIndex > 0)
+                              Positioned(
+                                left: 16,
+                                right: 16,
+                                top: 60,
+                                bottom: 200, // Position above bottom sheet (lower than before)
+                                child: _CrashChart(
+                                  data: AppState.instance.chartData,
+                                  dataIndex: AppState.instance.chartDataIndex,
+                                  crashed: AppState.instance.crashed,
+                                ),
+                              ),
+                            // Factor display on top
+                            Align(
+                              alignment: const Alignment(0, -0.35),
+                              child: FittedBox(
+                                child: Text(
+                                  'x ${AppState.instance.currentFactor.toStringAsFixed(2)}',
+                                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                                    fontFeatures: [const FontFeature.tabularFigures()],
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
