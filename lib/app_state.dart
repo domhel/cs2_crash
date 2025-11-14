@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:math';
-import 'dart:ffi';
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
@@ -16,6 +16,39 @@ enum GameState {
   playing,
   crashed,
 }
+
+class GameHistory {
+  final DateTime timestamp;
+  final double bet;
+  final double crashedAt;
+  final double? cashedOutAt;
+  final double winAmount;
+
+  GameHistory({
+    required this.timestamp,
+    required this.bet,
+    required this.crashedAt,
+    this.cashedOutAt,
+    required this.winAmount,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'timestamp': timestamp.toIso8601String(),
+        'bet': bet,
+        'crashedAt': crashedAt,
+        'cashedOutAt': cashedOutAt,
+        'winAmount': winAmount,
+      };
+
+  factory GameHistory.fromJson(Map<String, dynamic> json) => GameHistory(
+        timestamp: DateTime.parse(json['timestamp']),
+        bet: json['bet'],
+        crashedAt: json['crashedAt'],
+        cashedOutAt: json['cashedOutAt'],
+        winAmount: json['winAmount'],
+      );
+}
+
 
 class FastDoubleBuffer {
   final Float64List _data;
@@ -61,7 +94,7 @@ class AppState extends ChangeNotifier {
   bool _hasVibrator = true;
   bool _hasAskedForFeedback = false;
   SharedPreferences? _prefs;
-  
+
   AppState._() {
     Vibration.hasVibrator().then((hasVibrator) {
       _hasVibrator = hasVibrator == true;
@@ -72,6 +105,16 @@ class AppState extends ChangeNotifier {
       // Load saved balance
       coins = prefs.getDouble('coins_balance') ?? initialCapital;
       currentBetAmount = prefs.getDouble('current_bet_amount') ?? 10;
+      // Load saved history
+      final historyJson = prefs.getString('game_history');
+      if (historyJson != null) {
+        try {
+          final List<dynamic> decoded = jsonDecode(historyJson);
+          gameHistory = decoded.map((e) => GameHistory.fromJson(e)).toList();
+        } catch (e) {
+          gameHistory = [];
+        }
+      }
       notifyListeners();
     });
   }
@@ -91,6 +134,8 @@ class AppState extends ChangeNotifier {
   double lastBet = 10;
   double currentBetAmount = 10;
   bool canBet(double bet) => bet <= coins;
+  
+  List<GameHistory> gameHistory = [];
 
   void updateBetAmount(double amount) {
     if (amount > 0) {
@@ -99,9 +144,14 @@ class AppState extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
   void _saveBalance() {
     _prefs?.setDouble('coins_balance', coins);
+  }
+  
+  void _saveHistory() {
+    final encoded = jsonEncode(gameHistory.map((e) => e.toJson()).toList());
+    _prefs?.setString('game_history', encoded);
   }
 
   // Chart data for visualization
@@ -158,6 +208,33 @@ class AppState extends ChangeNotifier {
         timer.cancel();
         debugPrint('Crashed at $currentFactor');
         state = GameState.crashed;
+        // Add to history - lost the bet
+        if (!cashedOut) {
+          gameHistory.insert(
+            0,
+            GameHistory(
+              timestamp: DateTime.now(),
+              bet: lastBet,
+              crashedAt: currentFactor,
+              cashedOutAt: null,
+              winAmount: -lastBet,
+            ),
+          );
+          _saveHistory();
+        } else {
+          // Update the most recent history entry with crash factor
+          if (gameHistory.isNotEmpty) {
+            final recent = gameHistory[0];
+            gameHistory[0] = GameHistory(
+              timestamp: recent.timestamp,
+              bet: recent.bet,
+              crashedAt: currentFactor,
+              cashedOutAt: recent.cashedOutAt,
+              winAmount: recent.winAmount,
+            );
+            _saveHistory();
+          }
+        }
         if (_hasVibrator) {
           Vibration.vibrate();
         }
@@ -178,8 +255,21 @@ class AppState extends ChangeNotifier {
     }
     cashedOut = true;
     cashOutCount++;
-    coins += currentFactor * lastBet;
+    final winnings = currentFactor * lastBet;
+    coins += winnings;
     _saveBalance();
+    // Add to history - won (crashedAt will be updated when crash happens)
+    gameHistory.insert(
+      0,
+      GameHistory(
+        timestamp: DateTime.now(),
+        bet: lastBet,
+        crashedAt: 0, // Will be updated when crash happens
+        cashedOutAt: currentFactor,
+        winAmount: winnings - lastBet,
+      ),
+    );
+    _saveHistory();
     isCoinsTextExpanded = true;
     notifyListeners();
     HapticFeedback.mediumImpact().then((_) => Future.delayed(const Duration(milliseconds: 200))).then((_) {

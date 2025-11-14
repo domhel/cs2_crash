@@ -23,6 +23,13 @@ class MainApp extends StatelessWidget {
             final mediumText =
                 Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold) ?? const TextStyle();
             return Scaffold(
+              floatingActionButton: Padding(
+                padding: const EdgeInsets.only(bottom: 80), // Move above bottom sheet
+                child: FloatingActionButton(
+                  onPressed: () => _showHistoryDialog(context),
+                  child: const Icon(Icons.history),
+                ),
+              ),
               bottomSheet: BottomSheet(
                 enableDrag: false,
                 onClosing: () {},
@@ -225,6 +232,76 @@ void _showBetDialog(BuildContext context) {
       );
     },
   );
+}
+
+void _showHistoryDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Game History'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: AppState.instance.gameHistory.isEmpty
+              ? const Center(child: Text('No games played yet'))
+              : ListView.builder(
+                  itemCount: AppState.instance.gameHistory.length,
+                  itemBuilder: (context, index) {
+                    final game = AppState.instance.gameHistory[index];
+                    final isWin = game.winAmount >= 0;
+                    return Card(
+                      color: isWin ? Colors.green[900] : Colors.red[900],
+                      child: ListTile(
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _formatDateTime(game.timestamp),
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            Text(
+                              '${isWin ? '+' : ''}\$${game.winAmount.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isWin ? Colors.greenAccent : Colors.redAccent,
+                              ),
+                            ),
+                          ],
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text('Bet: \$${game.bet.toStringAsFixed(2)}'),
+                            if (game.cashedOutAt != null)
+                              Text('Cashed out at: ${game.cashedOutAt!.toStringAsFixed(2)}x')
+                            else
+                              const Text('Cashed out at: -'),
+                            if (game.crashedAt > 0)
+                              Text('Crashed at: ${game.crashedAt.toStringAsFixed(2)}x')
+                            else
+                              const Text('Crashed at: (still running)'),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+String _formatDateTime(DateTime dt) {
+  return '${dt.day}/${dt.month}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 }
 
 class _QuickBetButton extends StatelessWidget {
